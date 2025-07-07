@@ -17,6 +17,8 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { CopyLinkMenuItem } from "@/components/CopyLinkMenu";
+import { MenuActiveSwitch } from "@/components/EventTypeSwitcher";
 
 async function getData(userId: string) {
   const data = await prisma.user.findUnique({
@@ -94,19 +96,19 @@ export default async function DashboardPage() {
                               Preview
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Link2 className="size-5 mr-2"/>
-                            Copy
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Pen className="size-5 mr-2" />
-                            Edit
+                          <CopyLinkMenuItem meetingUrl={`${process.env.NEXT_PUBLIC_URL}/${data.userName}/${eventType.url}`}/>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/dashboard/events/${eventType.id}`}>
+                            <Pen className="size-5 mr-2" /> Edit
+                            </Link>
                           </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/dashboard/events/${eventType.id}/delete`} className="flex items-center gap-x-2 text-red-500">
                             <Trash className="size-5 mr-2" />
                             Delete
+                            </Link>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -128,9 +130,11 @@ export default async function DashboardPage() {
                   </div>
                 </Link>
                 <div className="bg-muted px-5 py-3 flex justify-between items-center ">
-                  <Switch />
-                  <Button className=" text-white cursor-pointer">
-                    Edit Event
+                  <MenuActiveSwitch initialChecked={eventType.active} eventTypeId={eventType.id} />
+                  <Button asChild className=" text-white cursor-pointer">
+                    <Link href={`/dashboard/events/${eventType.id}`}>
+                      Edit Event
+                    </Link>
                   </Button>
                 </div>
               </div>

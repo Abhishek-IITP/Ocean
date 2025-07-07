@@ -45,8 +45,9 @@ export const settingsSchema = z.object({
 
 
 export const eventTypeSchema = z.object({
+    id: z.string().optional(),
     title: z.string().min(2).max(100),
-    duration: z.number().min(15).max(60),
+    duration: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().min(15).max(60)),
     url: z.string().min(3).max(100).regex(/^[a-zA-Z0-9_-]+$/, {
         message: 'URL Slug can only contain letters, numbers, underscores, and hyphens',
     }),
