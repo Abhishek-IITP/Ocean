@@ -37,7 +37,7 @@ async function getData(userId: string){
 export default async function MeetingsRoute(){
     const session = await  requireUser();
     const data = await getData(session.user?.id as string);
-    console.log(data.data[0].when)
+    // console.log(data.data[0].when)
     return (
         <>
         {
