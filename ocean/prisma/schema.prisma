@@ -8,24 +8,34 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
 model User {
-  id            String          @id @default(cuid())
+  id            String         @id @default(cuid())
   name          String?
-  email         String          @unique
+  email         String         @unique
   emailVerified DateTime?
   image         String?
-  userName      String?         @unique
-  grantId      String?         
-  grandEmail String?         
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  userName      String?        @unique
+  grandEmail    String?
+  grantId       String?
+  timezone      String?
   accounts      Account[]
-  sessions      Session[]
   availability  Availability[]
+  bookings      Booking[]
   eventTypes    EventType[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  sessions      Session[]
+  tasks         Task[]
+  habits        Habit[]
+  notes         Note[]
+  goals         Goal[]
+  journalEntries JournalEntry[]
+  focusSessions FocusSession[]
+  dailyLogs     DailyLog[]
+  vaultItems    VaultItem[]
 }
- 
+
 model Account {
   userId            String
   type              String
@@ -38,48 +48,77 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
- 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
- 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@id([provider, providerAccountId])
 }
- 
+
 model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
- 
+
 model VerificationToken {
   identifier String
   token      String
   expires    DateTime
- 
+
   @@id([identifier, token])
 }
 
 model Availability {
   id          String   @id @default(uuid())
   day         Day
-  startTime   String   // Changed from DateTime to String
-  endTime     String   // Changed from DateTime to String
+  startTime   String
+  endTime     String
   isAvailable Boolean  @default(true)
-
-  userId String?
-  User   User?   @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  User        User?    @relation(fields: [userId], references: [id])
 }
 
-enum Day{
+model EventType {
+  id                String   @id @default(uuid())
+  title             String
+  duration          Int
+  url               String
+  description       String
+  active            Boolean  @default(true)
+  videoCallSoftware String   @default("Google Meet")
+  userId            String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  bookings          Booking[]
+  User              User     @relation(fields: [userId], references: [id])
+}
+
+model Booking {
+  id           String        @id @default(uuid())
+  eventTypeId  String
+  userId       String
+  guestName    String
+  guestEmail   String
+  startTime    DateTime
+  endTime      DateTime
+  nylasEventId String?       @unique
+  status       BookingStatus @default(CONFIRMED)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  EventType    EventType     @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  User         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startTime])
+  @@index([eventTypeId])
+}
+
+enum Day {
   MONDAY
   TUESDAY
   WEDNESDAY
@@ -88,20 +127,206 @@ enum Day{
   SATURDAY
   SUNDAY
 }
- 
 
-model EventType{
-  id          String   @id @default(uuid())
-  title        String  
-  duration    Int      
-  url         String
-  description String
-  active       Boolean  @default(true)  
-  videoCallSoftware String  @default("Google Meet") 
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
 
-  userId String
-  User   User   @relation(fields: [userId], references: [id])
+// ── Productivity: Tasks, Planner, Eisenhower Matrix, Time Blocking ──
 
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TaskQuadrant {
+  URGENT_IMPORTANT // do first
+  NOT_URGENT_IMPORTANT // schedule
+  URGENT_NOT_IMPORTANT // delegate
+  NOT_URGENT_NOT_IMPORTANT // eliminate
+  UNSORTED
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  notes       String?
+  status      TaskStatus   @default(TODO)
+  quadrant    TaskQuadrant @default(UNSORTED)
+  dueDate     DateTime?
+  // time blocking (optional scheduled window on the day planner)
+  blockStart  DateTime?
+  blockEnd    DateTime?
+  completedAt DateTime?
+  order       Int          @default(0)
+  userId      String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([userId, dueDate])
+  @@index([userId, blockStart])
+}
+
+// ── Habits ──
+
+model Habit {
+  id        String     @id @default(cuid())
+  name      String
+  icon      String     @default("sprout")
+  color     String     @default("sage")
+  target    Int        @default(1) // times per day
+  archived  Boolean    @default(false)
+  order     Int        @default(0)
+  userId    String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs      HabitLog[]
+
+  @@index([userId, archived])
+}
+
+model HabitLog {
+  id      String   @id @default(cuid())
+  habitId String
+  // day the log applies to, normalized to midnight (yyyy-mm-dd stored as DateTime)
+  date    DateTime
+  count   Int      @default(1)
+  habit   Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+  @@index([habitId, date])
+}
+
+// ── Notes & Quick Capture ──
+
+model Note {
+  id        String   @id @default(cuid())
+  title     String   @default("")
+  content   String   @default("")
+  color     String   @default("default")
+  pinned    Boolean  @default(false)
+  archived  Boolean  @default(false)
+  userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, pinned])
+  @@index([userId, updatedAt])
+}
+
+// ── Goals (weekly / monthly) ──
+
+enum GoalPeriod {
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+model Goal {
+  id        String     @id @default(cuid())
+  title     String
+  period    GoalPeriod @default(WEEKLY)
+  target    Int        @default(1)
+  progress  Int        @default(0)
+  // period this goal belongs to, normalized to the first day of the week/month
+  periodKey DateTime
+  done      Boolean    @default(false)
+  userId    String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, period, periodKey])
+}
+
+// ── Journal / Reviews ──
+
+enum JournalKind {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+model JournalEntry {
+  id        String      @id @default(cuid())
+  kind      JournalKind @default(DAILY)
+  // the day/period this entry documents, normalized to midnight
+  date      DateTime
+  content   String      @default("")
+  gratitude String?
+  mood      String?
+  userId    String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, date])
+  @@index([userId, date])
+}
+
+// ── Focus / Pomodoro sessions (deep work tracking) ──
+
+model FocusSession {
+  id        String   @id @default(cuid())
+  // minutes actually completed
+  minutes   Int
+  label     String?
+  completed Boolean  @default(true)
+  startedAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startedAt])
+}
+
+// ── Daily log: water, mood, sleep (one row per user per day) ──
+
+model DailyLog {
+  id        String   @id @default(cuid())
+  // normalized to midnight
+  date      DateTime
+  water     Int      @default(0) // glasses
+  mood      String?
+  sleepHrs  Float?
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+// ── Vault: encrypted valuables (credentials / secure notes) ──
+
+enum VaultCategory {
+  PASSWORD
+  NOTE
+  CARD
+  KEY
+  OTHER
+}
+
+model VaultItem {
+  id         String        @id @default(cuid())
+  title      String
+  category   VaultCategory @default(NOTE)
+  username   String? // non-secret label, e.g. account/email
+  url        String?
+  // AES-256-GCM encrypted payload
+  ciphertext String
+  iv         String
+  authTag    String
+  userId     String
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, category])
 }
