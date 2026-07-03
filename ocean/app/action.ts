@@ -439,7 +439,7 @@ export async function UpdateEventTypeStatusAction(prevState: any, { eventTypeId,
 }
 
 
-export async function DeleteEventTypeAction(formData: FormData) {
+export async function DeleteEventTypeAction(eventTypeId: string) {
     const session = await requireUser();
 
 
@@ -447,7 +447,7 @@ export async function DeleteEventTypeAction(formData: FormData) {
     try {
         const data = await prisma.eventType.delete({
             where: {
-                id: formData.get("eventTypeId") as string,
+                id: eventTypeId,
                 userId: session.user?.id,
             },
         });

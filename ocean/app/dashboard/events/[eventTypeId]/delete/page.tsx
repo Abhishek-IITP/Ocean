@@ -22,8 +22,7 @@ export default async function DeleteEventType({params}: {
                         cancel
                         </Link>
                     </Button>
-                    <form action={DeleteEventTypeAction}>
-                        <input type="hidden" name="eventTypeId" value={eventTypeId} />
+                    <form action={DeleteEventTypeAction.bind(null, eventTypeId)}>
                         <SubmitButton variant={"destructive"} text="Delete"/>
                     </form>
                 </CardFooter>
