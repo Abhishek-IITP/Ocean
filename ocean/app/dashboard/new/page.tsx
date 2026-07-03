@@ -32,14 +32,14 @@ export default function NewEventRoute() {
     })
 
     return (
-        <div className="flex flex-col items-center  justify-center h-full p-4 space-y-4">
+        <div className="mx-auto max-w-2xl">
            <Card>
             <CardHeader>
-                <CardTitle>
-                    Add New Appointment Type
+                <CardTitle className="font-serif text-2xl">
+                    New event type
                 </CardTitle>
                 <CardDescription>
-                    Create a new appointment type to manage your scheduling needs. Define the title, duration, and URL for booking.
+                    Create a bookable meeting template — set its title, length, and booking link.
                 </CardDescription>
             </CardHeader>
             <form id={form.id} noValidate action={action} onSubmit={form.onSubmit}>
@@ -52,23 +52,23 @@ export default function NewEventRoute() {
                             key={fields.title.key}
                             defaultValue={fields.title.initialValue} 
                             placeholder="Enter appointment title"/>
-                            <p className="text-red-500 text-sm">{fields.title.errors}</p>
+                            <p className="text-sm text-destructive">{fields.title.errors}</p>
                     </div>
                     <div className="flex flex-col gap-y-2 mt-4">
                         <Label>
                             URL Slug
                         </Label>
-                        <div className="flex items-center gap-x-2">
-                            <span className="inline-flex items-center px-5 rounded-l-md border border-r-0 border-muted bg-muted text-lg text-muted-foreground  ">
-                                Ocean.com/<span className="text-primary">event/</span>
+                        <div className="flex items-center">
+                            <span className="inline-flex h-9 items-center rounded-l-full border border-r-0 border-border bg-muted px-4 text-sm text-muted-foreground">
+                                ocean/
                             </span>
                             <Input
                             name={fields.url.name}
                             key={fields.url.key}
                             defaultValue={fields.url.initialValue}
-                             className="rounded-l-none" placeholder="Enter your URL slug"/>
-                            <p className="text-red-500 text-sm">{fields.url.errors}</p>
+                             className="rounded-l-none" placeholder="intro-call"/>
                         </div>
+                        <p className="text-sm text-destructive">{fields.url.errors}</p>
                     </div>
                     <div className="flex flex-col gap-y-2 mt-4">
                         <Label>
@@ -79,7 +79,7 @@ export default function NewEventRoute() {
                         key={fields.description.key}
                         defaultValue={fields.description.initialValue}
                         placeholder="Enter a brief description of the appointment type"/>
-                        <p className="text-red-500 text-sm">{fields.description.errors}</p>
+                        <p className="text-sm text-destructive">{fields.description.errors}</p>
                     </div>
                     <div className="flex flex-col gap-y-2 mt-4">
                         <Label>
@@ -131,11 +131,11 @@ export default function NewEventRoute() {
 
                 <CardFooter className="flex w-full justify-between">
                     <Button variant={"secondary"} asChild>
-                        <Link href="/dashboard">
+                        <Link href="/dashboard/events">
                             Cancel
                         </Link>
                     </Button>
-                    <SubmitButton className="w-40" text="Create Event"/>
+                    <SubmitButton className="w-auto px-8" text="Create event"/>
                 </CardFooter>
 
             </form>
