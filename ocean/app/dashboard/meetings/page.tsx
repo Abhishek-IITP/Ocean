@@ -1,84 +1,136 @@
-import { cancleMeetingAction } from "@/app/action"
-import prisma from "@/app/lib/db"
-import { requireUser } from "@/app/lib/hook"
-import { nylas } from "@/app/lib/nylas"
-import { EmptyState } from "@/components/EmptyState"
-import { SubmitButton } from "@/components/SubmitButtons"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { format, fromUnixTime } from "date-fns"
-import { Video } from "lucide-react"
+import { cancelMeetingAction } from "@/app/action";
+import prisma from "@/app/lib/db";
+import { requireUser } from "@/app/lib/hook";
+import { nylas } from "@/app/lib/nylas";
+import { EmptyState } from "@/components/EmptyState";
+import { SubmitButton } from "@/components/SubmitButtons";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { format, fromUnixTime } from "date-fns";
+import { CalendarDays, Video } from "lucide-react";
 
-async function getData(userId: string){
-    const userData = await prisma.user.findUnique({
-        where:{
-            id: userId,
-        },
-        select:{
-            grantId: true,
-            grandEmail: true,
-        }
-    })
-    if(!userData){
-        return {
-            error: "User not found",
-        }
-    }
-    const data = await nylas.events.list({
-        identifier: userData.grantId as string,
-        queryParams:{
-            calendarId: userData.grandEmail as string,
-        }
-    })
-    return data;
+function getEventTimes(when: unknown) {
+  if (
+    typeof when === "object" &&
+    when !== null &&
+    "startTime" in when &&
+    "endTime" in when &&
+    typeof when.startTime === "number" &&
+    typeof when.endTime === "number"
+  ) {
+    return { startTime: when.startTime, endTime: when.endTime };
+  }
+  return null;
 }
 
+function getConferenceUrl(conferencing: unknown) {
+  if (
+    typeof conferencing === "object" &&
+    conferencing !== null &&
+    "details" in conferencing &&
+    typeof conferencing.details === "object" &&
+    conferencing.details !== null &&
+    "url" in conferencing.details &&
+    typeof conferencing.details.url === "string"
+  ) {
+    return conferencing.details.url;
+  }
+  return null;
+}
 
-export default async function MeetingsRoute(){
-    const session = await  requireUser();
-    const data = await getData(session.user?.id as string);
-    // console.log(data.data[0].when)
-    return (
-        <>
-        {
-            data.data?.length < 1 ? (<EmptyState title="No meetings found" description="You have not booked any meetings yet" buttonText="Book a meeting" href="/dashboard" /> )
-             :(
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Bookings</CardTitle>
-                        <CardDescription>see all your bookings here</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {data.data.map((item)=>(
-                            <form action={cancleMeetingAction}>
-                                <input type="hidden" name="eventId"  value={item.id} />
-                            <div className="grid grid-cols-3 justify-center items-center gap-4" key={item.id}>
-                                <div className="mt-5">
-                                    <p className="text-sm text-muted-foreground">{format(fromUnixTime(item.when.startTime), "EEE, dd MMM")}</p>
-                                    <p className="text-sm text-muted-foreground pt-1">{format(fromUnixTime(item.when.startTime), "hh:mm a")} - {format(fromUnixTime(item.when.endTime), "hh:mm a")}</p>
-                                    <div className="flex items-center mt-1">
-                                        <Video className="size-4 mr-2 text-primary"/>
-                                        <a className="text-xs text-primary underline underline-offset-4 " href={item.conferencing?.details?.url as string} target="_blank">
-                                            Join Meeting
-                                        </a>
-                                    </div>
-                                </div>
+async function getData(userId: string) {
+  const userData = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { grantId: true, grandEmail: true },
+  });
+  if (!userData?.grantId || !userData?.grandEmail) {
+    return { data: [] };
+  }
+  const data = await nylas.events.list({
+    identifier: userData.grantId as string,
+    queryParams: { calendarId: userData.grandEmail as string },
+  });
+  return data;
+}
 
-                                <div className="flex flex-col items-start">
-                                    <h2 className="font-medium text-sm">{item.title}</h2>
-                                    <p>You and {item.participants[0]?.name}</p>
-                                </div>
-                                <SubmitButton text="Cancle Event" variant={"destructive"} className="w-fit ml-auto hover:text-white hover:bg-red-400"/>
-                            </div>
-                            <Separator className="my-3"/>
-                            </form>
-                        ))}
-                    </CardContent>
-                </Card>
-             )
+export default async function MeetingsRoute() {
+  const session = await requireUser();
+  const data = await getData(session.user!.id as string);
 
-        }
+  return (
+    <div className="mx-auto max-w-4xl space-y-8">
+      <PageHeader
+        title="Meetings"
+        description="Everything on your calendar, in one calm list. Join or cancel without leaving Ocean."
+      />
 
-        </>
-    )
+      {!data.data || data.data.length < 1 ? (
+        <EmptyState
+          icon={CalendarDays}
+          title="No meetings yet"
+          description="When someone books time with you, it will appear here — with a join link and a gentle heads-up."
+          buttonText="View event types"
+          href="/dashboard/events"
+        />
+      ) : (
+        <div className="divide-y divide-border/60 overflow-hidden rounded-2xl border border-border/70 bg-card shadow-soft">
+          {data.data.map((item) => {
+            const eventTimes = getEventTimes(item.when);
+            const conferenceUrl = getConferenceUrl(item.conferencing);
+            return (
+              <form
+                action={cancelMeetingAction}
+                key={item.id}
+                className="grid grid-cols-1 items-center gap-4 p-5 sm:grid-cols-[180px_1fr_auto]"
+              >
+                <input type="hidden" name="eventId" value={item.id} />
+                <div>
+                  <p className="text-sm font-semibold">
+                    {eventTimes
+                      ? format(fromUnixTime(eventTimes.startTime), "EEE, dd MMM")
+                      : "Date unavailable"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {eventTimes
+                      ? `${format(fromUnixTime(eventTimes.startTime), "HH:mm")} – ${format(
+                          fromUnixTime(eventTimes.endTime),
+                          "HH:mm"
+                        )}`
+                      : ""}
+                  </p>
+                  {conferenceUrl ? (
+                    <a
+                      className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-sage-deep hover:underline"
+                      href={conferenceUrl}
+                      target="_blank"
+                    >
+                      <Video className="size-3.5" /> Join meeting
+                    </a>
+                  ) : (
+                    <span className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Video className="size-3.5" /> No link
+                    </span>
+                  )}
+                </div>
+
+                <div className="min-w-0">
+                  <h2 className="truncate font-serif text-base font-bold">
+                    {item.title}
+                  </h2>
+                  <p className="truncate text-sm text-muted-foreground">
+                    You and {item.participants[0]?.name ?? "a guest"}
+                  </p>
+                </div>
+
+                <SubmitButton
+                  text="Cancel"
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                />
+              </form>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
