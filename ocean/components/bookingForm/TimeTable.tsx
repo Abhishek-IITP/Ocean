@@ -1,4 +1,4 @@
-import { Day } from "@/app/generated/prisma";
+import { Day } from "@prisma/client";
 import prisma from "@/app/lib/db";
 import { nylas } from "@/app/lib/nylas";
 import { Prisma } from "@prisma/client";

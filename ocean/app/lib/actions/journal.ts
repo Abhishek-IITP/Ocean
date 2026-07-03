@@ -3,7 +3,7 @@
 import prisma from "../db";
 import { requireUser } from "../hook";
 import { revalidatePath } from "next/cache";
-import { JournalKind } from "../../generated/prisma";
+import { JournalKind } from "@prisma/client";
 import { startOfDayUTC, startOfWeekUTC, startOfMonthUTC, parseDayKey } from "../dates";
 
 async function uid() {

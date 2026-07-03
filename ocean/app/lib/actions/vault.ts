@@ -4,7 +4,7 @@ import prisma from "../db";
 import { requireUser } from "../hook";
 import { revalidatePath } from "next/cache";
 import { encryptSecret, decryptSecret } from "../crypto";
-import { VaultCategory } from "../../generated/prisma";
+import { VaultCategory } from "@prisma/client";
 
 async function uid() {
   const session = await requireUser();

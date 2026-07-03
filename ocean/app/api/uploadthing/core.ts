@@ -1,4 +1,3 @@
-import { requireUser } from "@/app/lib/hook";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
 
@@ -11,7 +10,11 @@ export const ourFileRouter = {
     },
   })
     .middleware(async ({ req }) => {
-        const session = await requireUser();
+      // Dynamic import so that importing this module (e.g. for
+      // extractRouterConfig in the root layout) does NOT pull in
+      // the Prisma client at build time.
+      const { requireUser } = await import("@/app/lib/hook");
+      const session = await requireUser();
       if (!session.user?.id) throw new UploadThingError("Unauthorized");
       return { userId: session.user?.id };
     })
