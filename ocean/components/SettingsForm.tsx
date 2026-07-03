@@ -7,7 +7,6 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { SettingsAction } from "@/app/action";
 import { useForm } from "@conform-to/react";
-import { parse } from "path";
 import { parseWithZod } from "@conform-to/zod";
 import { settingsSchema } from "@/app/lib/zodSchemas";
 import { Button } from "./ui/button";
@@ -49,13 +48,13 @@ export function SettingsForm({ fullName, email, profileImage }: SettingsFormProp
         <form id={form.id} onSubmit={form.onSubmit}   action={action} className="flex flex-col gap-y-4 p-4">
             <CardContent className="flex flex-col gap-y-4">
                 <div className="flex flex-col gap-y-2">
-                    <Label className="font-medium">Username</Label>
-                    <Input name={fields.fullName.name} key={fields.fullName.id} defaultValue={fullName} placeholder="Enter your username" type="text" className="border rounded-md p-2" />
-                    <p className="text-red-500 text-sm">{fields.fullName.errors}</p>
+                    <Label className="font-medium">Full name</Label>
+                    <Input name={fields.fullName.name} key={fields.fullName.id} defaultValue={fullName} placeholder="Your name" type="text" />
+                    <p className="text-sm text-destructive">{fields.fullName.errors}</p>
                 </div>
                 <div className="flex flex-col gap-y-2">
                     <Label className="font-medium">Email</Label>
-                    <Input disabled defaultValue={email} placeholder="Enter your email" type="email" className="border rounded-md p-2" />
+                    <Input disabled defaultValue={email} placeholder="Your email" type="email" />
                 </div>
                 <div className="grid gap-y-5">
                     <Label className="font-medium">Profile Image</Label>
@@ -83,7 +82,7 @@ export function SettingsForm({ fullName, email, profileImage }: SettingsFormProp
                             endpoint={"imageUploader"}/>
                         )
                     }
-                    <p className="text-red-500 text-sm">{fields.profileImage.errors}</p>
+                    <p className="text-sm text-destructive">{fields.profileImage.errors}</p>
                 </div>
 
             </CardContent>
