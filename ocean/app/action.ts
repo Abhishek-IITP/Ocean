@@ -1,21 +1,45 @@
 "use server";
 
 import prisma from "./lib/db";
-import {parseWithZod} from '@conform-to/zod'
+import { parseWithZod } from '@conform-to/zod'
 import { requireUser } from "./lib/hook";
 import { eventTypeSchema, onboardingSchema, onboardingSchemaValidation, settingsSchema } from "./lib/zodSchemas";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { nylas } from "./lib/nylas";
-import { get } from "http";
+
+const dayNames = [
+    "SUNDAY",
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+] as const;
+
+function timeToMinutes(time: string) {
+    const [hours, minutes] = time.split(":").map(Number);
+    if (
+        Number.isNaN(hours) ||
+        Number.isNaN(minutes) ||
+        hours < 0 ||
+        hours > 23 ||
+        minutes < 0 ||
+        minutes > 59
+    ) {
+        throw new Error("Invalid time format");
+    }
+    return hours * 60 + minutes;
+}
 
 
-export async function OnboardingAction(prevState: any,formData: FormData) {
+export async function OnboardingAction(prevState: any, formData: FormData) {
     const session = await requireUser();
-    const submission= await parseWithZod(formData,{
+    const submission = await parseWithZod(formData, {
         schema: onboardingSchemaValidation({
             async isUsernameUnique() {
-                const  existingUsername = await prisma.user.findUnique({
+                const existingUsername = await prisma.user.findUnique({
                     where: {
                         userName: formData.get("userName") as string,
                     }
@@ -30,15 +54,15 @@ export async function OnboardingAction(prevState: any,formData: FormData) {
     }
 
     const data = await prisma.user.update({
-        where:{
+        where: {
             id: session.user?.id,
         },
-        data:{
+        data: {
             userName: submission.value.userName,
             name: submission.value.fullName,
             availability: {
-                createMany :{
-                    data:[
+                createMany: {
+                    data: [
                         {
                             day: "MONDAY",
                             startTime: "08:00",
@@ -83,7 +107,7 @@ export async function OnboardingAction(prevState: any,formData: FormData) {
 
 }
 
-export async function SettingsAction(prevState: any,formData: FormData) {
+export async function SettingsAction(prevState: any, formData: FormData) {
     const session = await requireUser();
     const submission = parseWithZod(formData, {
         schema: settingsSchema,
@@ -106,10 +130,10 @@ export async function SettingsAction(prevState: any,formData: FormData) {
 }
 
 
-export async function updateAvailabilityAction( formData: FormData){
+export async function updateAvailabilityAction(formData: FormData) {
     const session = await requireUser();
-    const rawData= Object.fromEntries(formData.entries())
-    const availabilityData= Object.keys(rawData).filter((key)=>
+    const rawData = Object.fromEntries(formData.entries())
+    const availabilityData = Object.keys(rawData).filter((key) =>
         key.startsWith("id-")
     ).map((key) => {
         const id = key.replace("id-", "");
@@ -121,38 +145,47 @@ export async function updateAvailabilityAction( formData: FormData){
         };
     });
     try {
-        await prisma.$transaction(
-            availabilityData.map((item)=> prisma.availability.update({
+        availabilityData.forEach((item) => {
+            if (timeToMinutes(item.startTime) >= timeToMinutes(item.endTime)) {
+                throw new Error("Start time must be before end time");
+            }
+        });
+
+        const updates = await prisma.$transaction(
+            availabilityData.map((item) => prisma.availability.updateMany({
                 where: {
                     id: item.id,
-                    // userId: session.user?.id,
+                    userId: session.user?.id,
                 },
                 data: {
                     isAvailable: item.isAvailable,
                     startTime: item.startTime,
                     endTime: item.endTime,
                 },
-            })) )
-         revalidatePath("/dashboard/availability");
+            })))
+        if (updates.some((result) => result.count !== 1)) {
+            throw new Error("Failed to update one or more availability records");
+        }
+        revalidatePath("/dashboard/availability");
     } catch (error) {
-        console.log(error)
-        
+        console.error("Error updating availability:", error)
+
     }
 }
 
-export async function CreateEventTypeAction(prevState:any,formData: FormData) {
+export async function CreateEventTypeAction(prevState: any, formData: FormData) {
     const session = await requireUser();
-    const submission =  parseWithZod(formData,{
+    const submission = parseWithZod(formData, {
         schema: eventTypeSchema,
     })
-    if(submission.status !== "success") {
+    if (submission.status !== "success") {
         return submission.reply();
     }
 
-        if (!session.user?.id) {
-            throw new Error("User ID is required to create an event type.");
-        }
-        await prisma.eventType.create({
+    if (!session.user?.id) {
+        throw new Error("User ID is required to create an event type.");
+    }
+    await prisma.eventType.create({
         data: {
             title: submission.value.title,
             duration: submission.value.duration,
@@ -163,78 +196,154 @@ export async function CreateEventTypeAction(prevState:any,formData: FormData) {
         },
     });
 
-    return redirect("/dashboard");
+    return redirect("/dashboard/events");
 
 }
 
 export async function CreateMeetingAction(formData: FormData) {
-        const getUserData=  await prisma.user.findUnique({
-        where:{
-            userName: formData.get("username") as string,
-        },
-        select: {
-            grandEmail: true,
-            grantId: true,
-        }
-    })
-    
-    if (!getUserData) {
-        throw new Error(`User not found `);
-    }
-
-    const eventTypeData =  await prisma.eventType.findUnique({
-        where:{
-            id: formData.get("eventTypeId") as string,
-        },
-        select: {
-            title: true,
-            description: true,
-        }
-    })
-
+    const username = formData.get("username") as string;
+    const eventTypeId = formData.get("eventTypeId") as string;
     const fromTime = formData.get("fromTime") as string;
     const eventDate = formData.get("eventDate") as string;
-    const meetingLength = Number(formData.get("meetingLength"));
-    const provider = formData.get("provider") as string;
+    const guestName = formData.get("name") as string;
+    const guestEmail = formData.get("email") as string;
+
+    if (!username || !eventTypeId || !fromTime || !eventDate || !guestName || !guestEmail) {
+        throw new Error("Missing booking details");
+    }
+    if (!guestEmail.includes("@")) {
+        throw new Error("Invalid guest email");
+    }
+
+    const eventTypeData = await prisma.eventType.findFirst({
+        where: {
+            id: eventTypeId,
+            active: true,
+            User: {
+                userName: username,
+            },
+        },
+        select: {
+            duration: true,
+            title: true,
+            description: true,
+            videoCallSoftware: true,
+            User: {
+                select: {
+                    id: true,
+                    grandEmail: true,
+                    grantId: true,
+                },
+            },
+        }
+    })
+
+    if (!eventTypeData) {
+        throw new Error("Event type not found or inactive");
+    }
+
+    if (!eventTypeData.User.grantId || !eventTypeData.User.grandEmail) {
+        throw new Error("Host calendar is not connected");
+    }
 
     const startDateTime = new Date(`${eventDate}T${fromTime}:00`);
-    const endDateTime = new Date(startDateTime.getTime() + meetingLength * 60000); 
+    if (Number.isNaN(startDateTime.getTime())) {
+        throw new Error("Invalid booking date or time");
+    }
+    if (startDateTime <= new Date()) {
+        throw new Error("Cannot book a meeting in the past");
+    }
 
-    await nylas.events.create({
-        identifier: getUserData.grantId as string,
+    const endDateTime = new Date(startDateTime.getTime() + eventTypeData.duration * 60000);
+    const day = dayNames[startDateTime.getDay()];
+    const availability = await prisma.availability.findFirst({
+        where: {
+            userId: eventTypeData.User.id,
+            day,
+            isAvailable: true,
+        },
+        select: {
+            startTime: true,
+            endTime: true,
+        },
+    });
+
+    if (!availability) {
+        throw new Error("Host is not available on this day");
+    }
+
+    const requestedStart = timeToMinutes(fromTime);
+    const requestedEnd = requestedStart + eventTypeData.duration;
+    if (
+        requestedStart < timeToMinutes(availability.startTime) ||
+        requestedEnd > timeToMinutes(availability.endTime)
+    ) {
+        throw new Error("Selected time is outside the host availability");
+    }
+
+    const freeBusy = await nylas.calendars.getFreeBusy({
+        identifier: eventTypeData.User.grantId,
         requestBody: {
-            title: eventTypeData?.title,
-            description: eventTypeData?.description,
+            startTime: Math.floor(startDateTime.getTime() / 1000),
+            endTime: Math.floor(endDateTime.getTime() / 1000),
+            emails: [eventTypeData.User.grandEmail],
+        },
+    });
+
+    const busySlots = freeBusy.data?.flatMap((calendar) =>
+        "timeSlots" in calendar ? calendar.timeSlots : []
+    ) ?? [];
+    if (busySlots.length > 0) {
+        throw new Error("This slot is no longer available");
+    }
+
+    const createdEvent = await nylas.events.create({
+        identifier: eventTypeData.User.grantId,
+        requestBody: {
+            title: eventTypeData.title,
+            description: eventTypeData.description,
             when: {
                 startTime: Math.floor(startDateTime.getTime() / 1000),
                 endTime: Math.floor(endDateTime.getTime() / 1000),
             },
-            conferencing:{
+            conferencing: {
                 autocreate: {},
-                provider: provider as any,
+                provider: eventTypeData.videoCallSoftware as any,
             },
             participants: [
                 {
-                    name: formData.get("name") as string,
-                    email: formData.get("email") as string,
+                    name: guestName,
+                    email: guestEmail,
                     status: "yes" as any,
                 }
             ]
         },
-        queryParams:{
-            calendarId: getUserData.grandEmail                                                                                                                                                                                                                                                                                                                           as string,
+        queryParams: {
+            calendarId: eventTypeData.User.grandEmail,
             notifyParticipants: true,
         },
     })
- 
+
+    await prisma.booking.create({
+        data: {
+            eventTypeId,
+            userId: eventTypeData.User.id,
+            guestName,
+            guestEmail,
+            startTime: startDateTime,
+            endTime: endDateTime,
+            nylasEventId: createdEvent.data.id,
+        },
+    });
+
 
     return redirect("/success");
 }
 
-export async function cancleMeetingAction(formData: FormData){
-    const session = await  requireUser();
-    const userData=  await prisma.user.findUnique({
-        where:{
+export async function cancelMeetingAction(formData: FormData) {
+    const session = await requireUser();
+    const userData = await prisma.user.findUnique({
+        where: {
             id: session.user?.id
         },
         select: {
@@ -242,17 +351,29 @@ export async function cancleMeetingAction(formData: FormData){
             grantId: true,
         }
     })
-    if(!userData){
+    if (!userData) {
         throw new Error("User not Found")
     }
 
-    const data = nylas.events.destroy({
-        eventId: formData.get("eventId") as string,
+    const eventId = formData.get("eventId") as string;
+
+    await nylas.events.destroy({
+        eventId,
         identifier: userData.grantId as string,
-        queryParams:{
+        queryParams: {
             calendarId: userData.grandEmail as string
         }
     })
+
+    await prisma.booking.updateMany({
+        where: {
+            userId: session.user?.id,
+            nylasEventId: eventId,
+        },
+        data: {
+            status: "CANCELLED",
+        },
+    });
 
     revalidatePath("/dashboard/meetings")
 }
@@ -260,19 +381,19 @@ export async function cancleMeetingAction(formData: FormData){
 export async function EditEventTypeAction(prevState: any, formData: FormData) {
     const session = await requireUser();
 
-    const submission =  parseWithZod(formData,{
+    const submission = parseWithZod(formData, {
         schema: eventTypeSchema,
     })
-    if(submission.status !== "success"){
+    if (submission.status !== "success") {
         return submission.reply()
     }
 
-    const data=  await prisma.eventType.update({
-        where:{
+    const data = await prisma.eventType.update({
+        where: {
             id: formData.get("id") as string,
             userId: session.user?.id
         },
-        data:{
+        data: {
             title: submission.value.title,
             duration: submission.value.duration,
             url: submission.value.url,
@@ -281,39 +402,39 @@ export async function EditEventTypeAction(prevState: any, formData: FormData) {
         }
     });
 
-    return redirect("/dashboard")
-    
+    return redirect("/dashboard/events")
+
 }
 
 
-export async function UpdateEventTypeStatusAction(prevState:any,{eventTypeId, isActive}: { eventTypeId: string; isActive: boolean }) {
-    
+export async function UpdateEventTypeStatusAction(prevState: any, { eventTypeId, isActive }: { eventTypeId: string; isActive: boolean }) {
+
     try {
         const session = await requireUser();
-     const data = await prisma.eventType.update({
-        where: {
-            id: eventTypeId,
-            userId: session.user?.id,
-        },
-        data: {
-            active: isActive,
-        },
-    });
+        const data = await prisma.eventType.update({
+            where: {
+                id: eventTypeId,
+                userId: session.user?.id,
+            },
+            data: {
+                active: isActive,
+            },
+        });
 
-    revalidatePath("/dashboard");
-    return {
-        status: "success",
-        message: `Event type ${isActive ? "activated" : "deactivated"} successfully`
-    }
+        revalidatePath("/dashboard");
+        return {
+            status: "success",
+            message: `Event type ${isActive ? "activated" : "deactivated"} successfully`
+        }
     } catch (error) {
         console.error("Error updating event type status:", error);
         return {
             status: "error",
             message: "Failed to update event type status"
         }
-        
+
     }
-    
+
 
 }
 
@@ -321,7 +442,7 @@ export async function UpdateEventTypeStatusAction(prevState:any,{eventTypeId, is
 export async function DeleteEventTypeAction(formData: FormData) {
     const session = await requireUser();
 
- 
+
 
     try {
         const data = await prisma.eventType.delete({
@@ -331,13 +452,10 @@ export async function DeleteEventTypeAction(formData: FormData) {
             },
         });
 
-       return redirect("/dashboard");
+        return redirect("/dashboard");
 
     } catch (error) {
         console.error("Error deleting event type:", error);
-        return {
-            status: "error",
-            message: "Failed to delete event type"
-        };
+        throw new Error("Failed to delete event type");
     }
 }

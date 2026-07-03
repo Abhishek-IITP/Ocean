@@ -60,10 +60,6 @@ export default async function BookingFormRoute({
   const { username, eventUrl } = await params;
   const resolvedSearchParams = await searchParams;
   
-  // Debug: Log the extracted values
-  console.log("Extracted username:", username);
-  console.log("Extracted eventUrl:", eventUrl);
-  
   const data = await getData(eventUrl, username);
 
   const selectedDate = resolvedSearchParams.date ? new Date(resolvedSearchParams.date) : new Date();

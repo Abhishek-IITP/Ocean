@@ -73,12 +73,14 @@ function calculateAvailableTimeSlots(
         `${date} ${dbAvailability.endTime}`, "yyyy-MM-dd HH:mm", new Date()
     )
 
-    const busySlots = nylasData.data[0].timeSlots.map((slot)=>(
-                {
-            start : fromUnixTime(slot.startTime),
-            end: fromUnixTime(slot.endTime)
-        }
-    ));
+    const busySlots = nylasData.data.flatMap((calendar) =>
+        "timeSlots" in calendar
+            ? calendar.timeSlots.map((slot) => ({
+                start : fromUnixTime(slot.startTime),
+                end: fromUnixTime(slot.endTime)
+            }))
+            : []
+    );
 
     const allSlots = [];
     let currentSlot = availableFrom;
