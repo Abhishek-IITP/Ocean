@@ -25,9 +25,10 @@ async function getData(eventTypeId: string) {
 }
 
 
-export default async function EditRoute({params}:{params: {eventTypeId: string}}){
+export default async function EditRoute({params}:{params: Promise<{eventTypeId: string}>}){
 
-    const data = await getData(params.eventTypeId)
+    const { eventTypeId } = await params
+    const data = await getData(eventTypeId)
     return (
         <EditEventForm  callProvider={data.videoCallSoftware} description={data.description} duration={data.duration} id={data.id} title={data.title} url={data.url}  />
     )
