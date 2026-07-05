@@ -6,9 +6,20 @@ import { useEffect, useState } from "react";
 
 const SESSION = 25 * 60;
 
-export function TimerDemo() {
+type TimerDemoProps = {
+  running?: boolean;
+  onRunningChange?: (running: boolean) => void;
+};
+
+export function TimerDemo({ running: controlledRunning, onRunningChange }: TimerDemoProps) {
   const [seconds, setSeconds] = useState(SESSION);
-  const [running, setRunning] = useState(false);
+  const [localRunning, setLocalRunning] = useState(false);
+  const running = controlledRunning !== undefined ? controlledRunning : localRunning;
+  const setRunning = (r: boolean | ((prev: boolean) => boolean)) => {
+    const nextVal = typeof r === "function" ? r(running) : r;
+    if (onRunningChange) onRunningChange(nextVal);
+    else setLocalRunning(nextVal);
+  };
 
   useEffect(() => {
     if (!running) return;

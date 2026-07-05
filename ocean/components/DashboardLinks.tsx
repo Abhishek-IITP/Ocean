@@ -13,6 +13,7 @@ import {
   Sprout,
   Target,
   Timer,
+  BarChart3,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -51,6 +52,7 @@ export const dashboardGroups: LinkGroup[] = [
       { name: "Goals", href: "/dashboard/goals", icon: Target },
       { name: "Focus", href: "/dashboard/focus", icon: Timer },
       { name: "Journal", href: "/dashboard/journal", icon: BookOpenText },
+      { name: "Insights", href: "/dashboard/insights", icon: BarChart3 },
     ],
   },
   {
@@ -63,44 +65,80 @@ export const dashboardGroups: LinkGroup[] = [
   },
 ];
 
-export function DashboardLinks({ onNavigate }: { onNavigate?: () => void }) {
+export function DashboardLinks({
+  onNavigate,
+  collapsed = false,
+}: {
+  onNavigate?: () => void;
+  collapsed?: boolean;
+}) {
   const pathname = usePathname();
 
   const isActive = (href: string) =>
     href === "/dashboard" ? pathname === href : pathname.startsWith(href);
 
   return (
-    <div className="space-y-6">
-      {dashboardGroups.map((group) => (
-        <div key={group.label} className="space-y-1">
-          <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
-            {group.label}
-          </p>
-          {group.items.map((link) => {
-            const active = isActive(link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={onNavigate}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200",
-                  active
-                    ? "bg-accent/60 text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent/30 hover:text-foreground"
-                )}
-              >
-                <link.icon
+    <div className={cn("space-y-6", collapsed && "space-y-5")}>
+      {dashboardGroups.map((group, groupIdx) => (
+        <div key={group.label}>
+          {collapsed ? (
+            groupIdx > 0 && <div className="mx-1 my-3 h-px bg-border/40" />
+          ) : (
+            <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50">
+              {group.label}
+            </p>
+          )}
+          <div className="space-y-0.5">
+            {group.items.map((link) => {
+              const active = isActive(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
                   className={cn(
-                    "size-[18px] shrink-0",
-                    active ? "text-sage-deep" : "text-muted-foreground"
+                    "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50",
+                    active
+                      ? "text-sage-deep"
+                      : "text-muted-foreground hover:text-foreground",
+                    collapsed && "justify-center px-0"
                   )}
-                />
-                <span>{link.name}</span>
-              </Link>
-            );
-          })}
+                  title={collapsed ? link.name : undefined}
+                >
+                  {/* Active indicator dot */}
+                  <span
+                    className={cn(
+                      "absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-sage-deep transition-all duration-200",
+                      active ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+
+                  {/* Hover bg */}
+                  <span
+                    className={cn(
+                      "absolute inset-0 rounded-lg transition-all duration-150",
+                      active
+                        ? "bg-sage-deep/8"
+                        : "bg-transparent group-hover:bg-accent/25"
+                    )}
+                  />
+
+                  <link.icon
+                    className={cn(
+                      "relative z-10 size-[16px] shrink-0 transition-colors",
+                      active
+                        ? "text-sage-deep"
+                        : "text-muted-foreground/70 group-hover:text-foreground"
+                    )}
+                  />
+                  {!collapsed && (
+                    <span className="relative z-10 font-medium">{link.name}</span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
         </div>
       ))}
     </div>
