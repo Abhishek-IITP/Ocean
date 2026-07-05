@@ -7,7 +7,7 @@ import {
 } from "@/app/lib/actions/tasks";
 import { TaskCheck } from "@/components/dashboard/TaskCheck";
 import { cn } from "@/lib/utils";
-import { MoveRight, Plus, Trash2, ChevronDown, Sparkles, X } from "lucide-react";
+import { MoveRight, Plus, Trash2, ChevronDown, Sparkles, X, Loader2 } from "lucide-react";
 import { OceanSelect } from "@/components/ui/ocean-select";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -79,7 +79,7 @@ export function PlannerBoard({ tasks }: { tasks: PlannerTask[] }) {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [quadrant, setQuadrant] = useState<Quadrant>("URGENT_IMPORTANT");
-  const [, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
 
   // AI Refinement states
   const [refineLoading, setRefineLoading] = useState(false);
@@ -172,13 +172,15 @@ export function PlannerBoard({ tasks }: { tasks: PlannerTask[] }) {
       <div className="flex flex-col gap-2 rounded-2xl border border-border/70 bg-card p-3 shadow-soft sm:flex-row">
         <input
           value={title}
+          disabled={pending}
           onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && add()}
+          onKeyDown={(e) => e.key === "Enter" && !pending && add()}
           placeholder="Add a task…"
-          className="h-11 flex-1 rounded-xl border border-border bg-background px-4 text-sm outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50"
+          className="h-11 flex-1 rounded-xl border border-border bg-background px-4 text-sm outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50 disabled:opacity-50"
         />
         <OceanSelect
           value={quadrant}
+          disabled={pending}
           onChange={(e) => setQuadrant(e.target.value as Quadrant)}
           className="h-11 shrink-0 sm:w-40"
         >
@@ -193,7 +195,7 @@ export function PlannerBoard({ tasks }: { tasks: PlannerTask[] }) {
         {/* Refine Button */}
         <button
           onClick={handleRefine}
-          disabled={refineLoading || !title.trim()}
+          disabled={refineLoading || pending || !title.trim()}
           className="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-4 text-sm font-semibold text-muted-foreground hover:text-foreground hover:border-sage-deep/40 transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           title="Refine task details with AI"
         >
@@ -203,9 +205,15 @@ export function PlannerBoard({ tasks }: { tasks: PlannerTask[] }) {
 
         <button
           onClick={add}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px cursor-pointer"
+          disabled={pending || !title.trim()}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <Plus className="size-4" /> Add
+          {pending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Plus className="size-4" />
+          )}
+          {pending ? "Adding..." : "Add"}
         </button>
       </div>
 
@@ -218,7 +226,8 @@ export function PlannerBoard({ tasks }: { tasks: PlannerTask[] }) {
             </span>
             <button
               onClick={() => setRefineData(null)}
-              className="rounded p-0.5 text-muted-foreground/60 hover:bg-accent/40 hover:text-foreground cursor-pointer focus-visible:outline-none"
+              disabled={pending}
+              className="rounded p-0.5 text-muted-foreground/60 hover:bg-accent/40 hover:text-foreground cursor-pointer focus-visible:outline-none disabled:opacity-40"
             >
               <X className="size-4" />
             </button>
@@ -251,9 +260,11 @@ export function PlannerBoard({ tasks }: { tasks: PlannerTask[] }) {
           <div className="flex justify-end gap-2.5 pt-2 border-t border-border/40">
             <button
               onClick={applySuggestions}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-sage-deep px-4 text-xs font-semibold text-sage-deep-foreground transition-all hover:bg-sage-deep/95 cursor-pointer"
+              disabled={pending}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-sage-deep px-4 text-xs font-semibold text-sage-deep-foreground transition-all hover:bg-sage-deep/95 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Apply Suggestions
+              {pending && <Loader2 className="size-3 animate-spin" />}
+              {pending ? "Applying..." : "Apply Suggestions"}
             </button>
           </div>
         </div>
@@ -271,12 +282,17 @@ export function PlannerBoard({ tasks }: { tasks: PlannerTask[] }) {
                 q.accent
               )}
             >
-              <div className="mb-3">
-                <h3 className="font-serif text-lg font-bold">{q.title}</h3>
-                <p className="text-xs text-muted-foreground">{q.hint}</p>
+              <div className="mb-4 flex items-center justify-between border-b border-border/40 pb-2">
+                <div>
+                  <h3 className="font-serif text-lg font-bold">{q.title}</h3>
+                  <p className="text-[10px] text-muted-foreground">{q.hint}</p>
+                </div>
+                <span className="rounded-full bg-accent/30 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
+                  {items.length}
+                </span>
               </div>
               {items.length === 0 ? (
-                <p className="py-4 text-center text-xs text-muted-foreground">
+                <p className="py-8 text-center text-xs text-muted-foreground/60 italic">
                   Nothing here yet.
                 </p>
               ) : (
@@ -288,6 +304,7 @@ export function PlannerBoard({ tasks }: { tasks: PlannerTask[] }) {
                       quadrants={ORDER}
                       onMove={move}
                       onRemove={remove}
+                      disabled={pending}
                     />
                   ))}
                 </ul>
@@ -309,6 +326,7 @@ export function PlannerBoard({ tasks }: { tasks: PlannerTask[] }) {
                 quadrants={ORDER}
                 onMove={move}
                 onRemove={remove}
+                disabled={pending}
               />
             ))}
           </ul>
@@ -323,11 +341,13 @@ function TaskRow({
   quadrants,
   onMove,
   onRemove,
+  disabled = false,
 }: {
   task: PlannerTask;
   quadrants: Quadrant[];
   onMove: (id: string, q: Quadrant) => void;
   onRemove: (id: string) => void;
+  disabled?: boolean;
 }) {
   const labels: Record<Quadrant, string> = {
     URGENT_IMPORTANT: "Do first",
@@ -352,8 +372,9 @@ function TaskRow({
           <select
             aria-label="Move task"
             value={task.quadrant}
+            disabled={disabled}
             onChange={(e) => onMove(task.id, e.target.value as Quadrant)}
-            className="h-7 cursor-pointer appearance-none rounded-lg border border-border/60 bg-card pl-6 pr-5.5 text-[10px] font-semibold text-muted-foreground hover:text-foreground outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50 transition-all duration-150"
+            className="h-7 cursor-pointer appearance-none rounded-lg border border-border/60 bg-card pl-6 pr-5.5 text-[10px] font-semibold text-muted-foreground hover:text-foreground outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50 transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {quadrants.map((q) => (
               <option key={q} value={q}>
@@ -366,8 +387,9 @@ function TaskRow({
         </div>
         <button
           onClick={() => onRemove(task.id)}
+          disabled={disabled}
           aria-label="Delete task"
-          className="grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
+          className="grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-45"
         >
           <Trash2 className="size-3.5" />
         </button>

@@ -28,7 +28,7 @@ export function HeroLivingWorkday() {
   const controller = useHeroLoopController();
 
   return (
-    <section className="relative isolate flex min-h-[100svh] w-full flex-col overflow-hidden px-4 pt-24 pb-12 sm:px-6 md:pt-28 md:pb-16 bg-background">
+    <section id="workspace" className="relative isolate flex min-h-[100svh] w-full flex-col overflow-hidden px-4 pt-24 pb-12 sm:px-6 md:pt-28 md:pb-16 bg-background">
       <div className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col justify-between">
         {/* Headline + Introduction zone: small and elegant, supporting the product */}
         <div className="max-w-xl self-start px-2 mb-2 sm:mb-4 lg:mb-0">

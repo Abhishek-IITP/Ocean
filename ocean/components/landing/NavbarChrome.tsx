@@ -17,19 +17,19 @@ export function NavbarChrome({ authButton }: { authButton: React.ReactNode }) {
         }}
         className="mx-auto mt-3 flex w-[min(72rem,calc(100%-1.5rem))] items-center justify-between rounded-full border bg-background/25 px-4 py-2.5 shadow-soft backdrop-blur-xl md:px-6"
       >
-        <Logo />
+        <Logo href="#" />
 
         <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
-          <Link href="#features" className="transition-colors hover:text-foreground">
+          <Link href="#features" className="relative py-1 transition-colors hover:text-foreground after:absolute after:bottom-0 after:left-1/2 after:h-[2px] after:w-0 after:-translate-x-1/2 after:bg-sage-deep after:transition-all after:duration-300 hover:after:w-full">
             Features
           </Link>
-          <Link href="#workspace" className="transition-colors hover:text-foreground">
+          <Link href="#workspace" className="relative py-1 transition-colors hover:text-foreground after:absolute after:bottom-0 after:left-1/2 after:h-[2px] after:w-0 after:-translate-x-1/2 after:bg-sage-deep after:transition-all after:duration-300 hover:after:w-full">
             Workspace
           </Link>
-          <Link href="#dashboard" className="transition-colors hover:text-foreground">
+          <Link href="#dashboard" className="relative py-1 transition-colors hover:text-foreground after:absolute after:bottom-0 after:left-1/2 after:h-[2px] after:w-0 after:-translate-x-1/2 after:bg-sage-deep after:transition-all after:duration-300 hover:after:w-full">
             Dashboard
           </Link>
-          <Link href="#faq" className="transition-colors hover:text-foreground">
+          <Link href="#faq" className="relative py-1 transition-colors hover:text-foreground after:absolute after:bottom-0 after:left-1/2 after:h-[2px] after:w-0 after:-translate-x-1/2 after:bg-sage-deep after:transition-all after:duration-300 hover:after:w-full">
             FAQ
           </Link>
         </nav>

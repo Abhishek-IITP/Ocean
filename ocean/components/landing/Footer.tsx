@@ -114,9 +114,9 @@ export function Footer() {
       {/* Oversized outlined wordmark — a quiet signature, not a gradient or shadow */}
       <div
         aria-hidden
-        className="pointer-events-none -mb-6 flex items-center justify-center gap-3 overflow-hidden pb-2 text-[16vw] font-bold leading-none tracking-tight text-transparent [-webkit-text-stroke:1px_hsl(var(--foreground)/0.08)] sm:text-[11rem]"
+        className="pointer-events-none -mb-6 flex items-center justify-center gap-3 overflow-hidden pb-2 text-[16vw] font-bold leading-none tracking-tight text-transparent [-webkit-text-stroke:1px_hsl(var(--foreground)/0.25)] sm:text-[11rem]"
       >
-        <OceanMark className="size-[0.6em] shrink-0 text-foreground/[0.06]" />
+        <OceanMark className="size-[0.6em] shrink-0 text-foreground/[0.22]" />
         Ocean
       </div>
     </footer>
