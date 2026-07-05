@@ -72,7 +72,7 @@ export function ChapterSanctuary() {
 
         {/* Center column: Editorial copy */}
         <div className="lg:col-span-4 flex flex-col justify-center space-y-6">
-          <Reveal className="space-y-4">
+          <Reveal className="space-y-4" animation="fade-right">
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-sage-deep/80">
               Chapter 07 &middot; Sanctuary
             </span>
@@ -87,7 +87,7 @@ export function ChapterSanctuary() {
 
         {/* Right column: Interactive Sanctuary mockup */}
         <div className="lg:col-span-6 flex items-center">
-          <Reveal className="w-full overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm hover:shadow-lift transition-all duration-300 select-none">
+          <Reveal className="w-full overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm hover:shadow-lift transition-all duration-300 select-none" animation="flip-3d">
             {/* Header row */}
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/40 pb-4 mb-4">
               <div>

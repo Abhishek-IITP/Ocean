@@ -1,4 +1,3 @@
-"use client";
 import { cn } from "@/lib/utils";
 import {
   BookOpenText,
@@ -14,10 +13,11 @@ import {
   Target,
   Timer,
   BarChart3,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ForwardRefExoticComponent, RefAttributes } from "react";
+import { ForwardRefExoticComponent, RefAttributes, useState, useEffect } from "react";
 
 type Icon = ForwardRefExoticComponent<
   Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
@@ -73,6 +73,11 @@ export function DashboardLinks({
   collapsed?: boolean;
 }) {
   const pathname = usePathname();
+  const [clickedHref, setClickedHref] = useState<string | null>(null);
+
+  useEffect(() => {
+    setClickedHref(null);
+  }, [pathname]);
 
   const isActive = (href: string) =>
     href === "/dashboard" ? pathname === href : pathname.startsWith(href);
@@ -91,17 +96,25 @@ export function DashboardLinks({
           <div className="space-y-0.5">
             {group.items.map((link) => {
               const active = isActive(link.href);
+              const isTransitioning = clickedHref === link.href;
+
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  onClick={onNavigate}
+                  onClick={() => {
+                    if (!active) {
+                      setClickedHref(link.href);
+                    }
+                    if (onNavigate) onNavigate();
+                  }}
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-all duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50",
                     active
                       ? "text-sage-deep"
                       : "text-muted-foreground hover:text-foreground",
+                    isTransitioning && "opacity-75 pointer-events-none",
                     collapsed && "justify-center px-0"
                   )}
                   title={collapsed ? link.name : undefined}
@@ -124,14 +137,18 @@ export function DashboardLinks({
                     )}
                   />
 
-                  <link.icon
-                    className={cn(
-                      "relative z-10 size-[16px] shrink-0 transition-colors",
-                      active
-                        ? "text-sage-deep"
-                        : "text-muted-foreground/70 group-hover:text-foreground"
-                    )}
-                  />
+                  {isTransitioning ? (
+                    <Loader2 className="relative z-10 size-[16px] shrink-0 animate-spin text-sage-deep" />
+                  ) : (
+                    <link.icon
+                      className={cn(
+                        "relative z-10 size-[16px] shrink-0 transition-colors",
+                        active
+                          ? "text-sage-deep"
+                          : "text-muted-foreground/70 group-hover:text-foreground"
+                      )}
+                    />
+                  )}
                   {!collapsed && (
                     <span className="relative z-10 font-medium">{link.name}</span>
                   )}

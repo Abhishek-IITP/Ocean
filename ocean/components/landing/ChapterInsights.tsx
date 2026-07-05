@@ -21,7 +21,7 @@ export function ChapterInsights() {
 
         {/* Center column: Editorial copy */}
         <div className="lg:col-span-4 flex flex-col justify-center space-y-6">
-          <Reveal className="space-y-4">
+          <Reveal className="space-y-4" animation="fade-right">
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-sage-deep/80">
               Chapter 06 &middot; Reflection
             </span>

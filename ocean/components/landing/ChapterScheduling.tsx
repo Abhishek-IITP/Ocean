@@ -10,7 +10,7 @@ const connections = [
 
 export function ChapterScheduling() {
   return (
-    <section id="scheduling" className="mx-auto max-w-7xl px-6 py-20 bg-background">
+    <section id="features" className="mx-auto max-w-7xl px-6 py-20 bg-background">
       <div className="grid gap-10 lg:grid-cols-12 lg:items-stretch">
         
         {/* Left Timeline Backbone Indicator */}
@@ -22,7 +22,7 @@ export function ChapterScheduling() {
 
         {/* Center column: Editorial copy */}
         <div className="lg:col-span-4 flex flex-col justify-center space-y-6">
-          <Reveal className="space-y-4">
+          <Reveal className="space-y-4" animation="fade-right">
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-sage-deep/80">
               Chapter 02 &middot; Scheduling
             </span>
@@ -50,7 +50,7 @@ export function ChapterScheduling() {
 
         {/* Right column: Visual calendar blocks */}
         <div className="lg:col-span-6 flex items-center">
-          <Reveal className="w-full space-y-4">
+          <Reveal className="w-full space-y-4" animation="flip-3d">
             {/* The schedule mockup block */}
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between text-xs text-muted-foreground">

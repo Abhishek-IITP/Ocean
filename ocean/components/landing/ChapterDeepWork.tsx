@@ -23,7 +23,7 @@ export function ChapterDeepWork() {
 
         {/* Center column: Editorial copy */}
         <div className="lg:col-span-4 flex flex-col justify-center space-y-6">
-          <Reveal className="space-y-4">
+          <Reveal className="space-y-4" animation="fade-right">
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-sage-deep/80">
               Chapter 03 &middot; Execution
             </span>
@@ -38,7 +38,7 @@ export function ChapterDeepWork() {
 
         {/* Right column: Interactive Focus & Quiet Tasks */}
         <div className="lg:col-span-6 flex items-center">
-          <Reveal className="w-full grid gap-4 sm:grid-cols-12">
+          <Reveal className="w-full grid gap-4 sm:grid-cols-12" animation="scale-up">
             
             {/* The Timer Card */}
             <div className="sm:col-span-7 rounded-2xl border border-border bg-card p-5 shadow-sm">

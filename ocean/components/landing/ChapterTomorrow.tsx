@@ -24,7 +24,7 @@ export function ChapterTomorrow() {
 
         {/* Center column: Editorial copy */}
         <div className="lg:col-span-4 flex flex-col justify-center space-y-6">
-          <Reveal className="space-y-4">
+          <Reveal className="space-y-4" animation="fade-right">
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-sage-deep/80">
               Chapter 05 &middot; Optimization
             </span>
@@ -39,7 +39,7 @@ export function ChapterTomorrow() {
 
         {/* Right column: Tomorrow preview cards */}
         <div className="lg:col-span-6 flex items-center">
-          <Reveal className="w-full flex justify-center">
+          <Reveal className="w-full flex justify-center" animation="scale-up">
             <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-sm hover:shadow-lift transition-all duration-300">
               {/* Tomorrow preview lane */}
               <div className="flex items-center gap-4 rounded-xl border border-border/50 bg-muted/20 px-4 py-3.5">

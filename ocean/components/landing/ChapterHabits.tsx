@@ -18,7 +18,7 @@ export function ChapterHabits() {
 
         {/* Center column: Editorial copy */}
         <div className="lg:col-span-4 flex flex-col justify-center space-y-6">
-          <Reveal className="space-y-4">
+          <Reveal className="space-y-4" animation="fade-right">
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-sage-deep/80">
               Chapter 04 &middot; Consistency
             </span>
@@ -33,7 +33,7 @@ export function ChapterHabits() {
 
         {/* Right column: Interactive habits widget */}
         <div className="lg:col-span-6 flex items-center">
-          <Reveal className="w-full flex justify-center">
+          <Reveal className="w-full flex justify-center" animation="flip-3d">
             <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-sm hover:shadow-lift transition-all duration-300">
               <HabitsBoardDemo />
             </div>
