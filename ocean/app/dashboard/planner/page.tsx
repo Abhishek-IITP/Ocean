@@ -20,7 +20,7 @@ export default async function PlannerPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="mx-auto max-w-5xl animate-rise">
       <PageHeader
         title="Day planner"
         description="Sort what matters with the Eisenhower matrix, then work through it with a clear head. Finished tasks tuck themselves away."

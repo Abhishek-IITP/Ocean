@@ -1,19 +1,16 @@
 import Navbar from "../components/Navbar";
 import { auth } from "./lib/auth";
 import { redirect } from "next/navigation";
-import { Hero } from "@/components/Hero";
+import { HeroLivingWorkday } from "@/components/landing/hero/HeroLivingWorkday";
 import { Logos } from "@/components/Logos";
-import { Features } from "@/components/Features";
-import { AuthModel } from "@/components/AuthModel";
-import { SectionHeading } from "@/components/ui/section";
-import { WorkflowSteps } from "@/components/landing/WorkflowSteps";
-import { Integrations } from "@/components/landing/Integrations";
-import { DashboardShowcase } from "@/components/landing/DashboardShowcase";
-import { Testimonials } from "@/components/landing/Testimonials";
-import { Faq } from "@/components/landing/Faq";
-import { WorkspaceDemo } from "@/components/landing/WorkspaceDemo";
+import { ChapterScheduling } from "@/components/landing/ChapterScheduling";
+import { ChapterDeepWork } from "@/components/landing/ChapterDeepWork";
+import { ChapterHabits } from "@/components/landing/ChapterHabits";
+import { ChapterTomorrow } from "@/components/landing/ChapterTomorrow";
+import { ChapterInsights } from "@/components/landing/ChapterInsights";
+import { ChapterSanctuary } from "@/components/landing/ChapterSanctuary";
+import { ChapterFAQ } from "@/components/landing/ChapterFAQ";
 import { Footer } from "@/components/landing/Footer";
-import { Reveal } from "@/components/landing/Reveal";
 
 export default async function Home() {
   const session = await auth();
@@ -26,44 +23,34 @@ export default async function Home() {
       <Navbar />
 
       <main className="flex w-full flex-grow flex-col">
-        <Hero />
+        {/* Chapter 01: Hero Redesign */}
+        <HeroLivingWorkday />
 
-        <div className="mx-auto w-full max-w-6xl border-t border-border/60 px-6">
+        {/* Supporting brand trust logos */}
+        <div className="mx-auto w-full max-w-6xl px-6 pb-12">
           <Logos />
         </div>
 
-        <div className="border-t border-border/60">
-          <Features />
-        </div>
+        {/* Chapter 02: Scheduling */}
+        <ChapterScheduling />
 
-        <div className="border-t border-border/60 bg-accent/10">
-          <WorkspaceDemo />
-        </div>
+        {/* Chapter 03: Deep Work */}
+        <ChapterDeepWork />
 
-        <WorkflowSteps />
-        <Integrations />
-        <DashboardShowcase />
-        <Testimonials />
-        <Faq />
+        {/* Chapter 04: Habits */}
+        <ChapterHabits />
 
-        {/* CTA */}
-        <section className="mx-auto flex w-full max-w-3xl flex-col items-center px-6 py-28 text-center md:py-36">
-          <Reveal>
-            <SectionHeading
-              eyebrow="Begin quietly"
-              title={
-                <>
-                  Start your <span className="accent-italic text-sage-deep">calm</span>{" "}
-                  morning.
-                </>
-              }
-              description="Join the planners who trade frantic dashboards for a single, unhurried place to think. Free to begin — no credit card."
-            />
-          </Reveal>
-          <div className="mt-9">
-            <AuthModel label="Create your space" />
-          </div>
-        </section>
+        {/* Chapter 05: Tomorrow */}
+        <ChapterTomorrow />
+
+        {/* Chapter 06: Insights */}
+        <ChapterInsights />
+
+        {/* Chapter 07: Sanctuary */}
+        <ChapterSanctuary />
+
+        {/* Chapter 08: FAQ & SignUp */}
+        <ChapterFAQ />
       </main>
 
       <Footer />

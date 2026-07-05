@@ -13,7 +13,7 @@ export default async function VaultPage() {
   });
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto max-w-4xl animate-rise">
       <PageHeader
         title="Vault"
         description="Your valuables, kept quietly out of sight — passwords, keys and private notes, encrypted at rest."

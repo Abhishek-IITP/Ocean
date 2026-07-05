@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
-import { signIn } from "@/app/lib/auth";
+import { signInWithGithub, signInWithGoogle } from "@/app/lib/authActions";
 import { GithubAuthButton, GoogleAuthButton } from "./SubmitButtons";
 import { OceanMark } from "./Logo";
 
@@ -28,17 +28,11 @@ export function AuthModel({ label = "Start free" }: { label?: string }) {
         </DialogHeader>
 
         <div className="flex flex-col gap-3 mt-6">
-          <form action={async () => {
-            "use server";
-            await signIn("google");
-          }} className="w-full">
+          <form action={signInWithGoogle} className="w-full">
             <GoogleAuthButton />
           </form>
 
-          <form action={async () => {
-            "use server";
-            await signIn("github");
-          }} className="w-full">
+          <form action={signInWithGithub} className="w-full">
             <GithubAuthButton />
           </form>
         </div>

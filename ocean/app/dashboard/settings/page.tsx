@@ -17,7 +17,7 @@ export default async function SettingsRoute() {
   const session = await requireUser();
   const data = await getData(session.user!.id as string);
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <div className="mx-auto max-w-2xl animate-rise">
       <PageHeader
         title="Settings"
         description="Manage your profile and how you appear to people who book with you."

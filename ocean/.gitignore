@@ -13,6 +13,8 @@
 .claude/
 .kiro/
 .vscode
+.agents
+.impeccable
 
 # testing
 /coverage
