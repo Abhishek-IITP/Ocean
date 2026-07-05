@@ -22,6 +22,8 @@ import {
   Video,
 } from "lucide-react";
 import { format } from "date-fns";
+import { Suspense } from "react";
+import { IntentSetter } from "@/components/dashboard/IntentSetter";
 
 export default async function DashboardHome() {
   const session = await requireUser();
@@ -73,7 +75,12 @@ export default async function DashboardHome() {
     <div className="mx-auto max-w-7xl animate-rise">
       {/* ── Page top: Greeting + inline stats ── */}
       <div className="mb-10 flex flex-wrap items-end justify-between gap-6 border-b border-border/50 pb-8">
-        <Greeting name={firstName} />
+        <div className="space-y-3">
+          <Greeting name={firstName} />
+          <Suspense fallback={<div className="h-6 w-48 rounded bg-sage-deep/5 animate-pulse" />}>
+            <IntentSetter userId={session.user!.id as string} />
+          </Suspense>
+        </div>
 
         {/* Inline stat strip */}
         <div className="flex items-center gap-6 text-right">

@@ -7,6 +7,7 @@ import { SubmitButton } from "@/components/SubmitButtons";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { format, fromUnixTime } from "date-fns";
 import { CalendarDays, Video } from "lucide-react";
+import { MeetingPrepButton } from "@/components/dashboard/MeetingPrepButton";
 
 function getEventTimes(when: unknown) {
   if (
@@ -76,6 +77,7 @@ export default async function MeetingsRoute() {
           {data.data.map((item) => {
             const eventTimes = getEventTimes(item.when);
             const conferenceUrl = getConferenceUrl(item.conferencing);
+            const guestName = item.participants[0]?.name ?? "a guest";
             return (
               <form
                 action={cancelMeetingAction}
@@ -102,6 +104,7 @@ export default async function MeetingsRoute() {
                       className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-sage-deep hover:underline"
                       href={conferenceUrl}
                       target="_blank"
+                      rel="noreferrer"
                     >
                       <Video className="size-3.5" /> Join meeting
                     </a>
@@ -117,8 +120,12 @@ export default async function MeetingsRoute() {
                     {item.title}
                   </h2>
                   <p className="truncate text-sm text-muted-foreground">
-                    You and {item.participants[0]?.name ?? "a guest"}
+                    You and {guestName}
                   </p>
+                  <MeetingPrepButton
+                    title={item.title}
+                    guestName={guestName}
+                  />
                 </div>
 
                 <SubmitButton

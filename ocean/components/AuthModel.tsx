@@ -9,12 +9,18 @@ import {
 import { signInWithGithub, signInWithGoogle } from "@/app/lib/authActions";
 import { GithubAuthButton, GoogleAuthButton } from "./SubmitButtons";
 import { OceanMark } from "./Logo";
+import { ArrowRight } from "lucide-react";
 
 export function AuthModel({ label = "Start free" }: { label?: string }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>{label}</Button>
+        <Button className="group/btn cursor-pointer">
+          <span className="flex items-center gap-1.5">
+            {label}
+            <ArrowRight className="size-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+          </span>
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[400px] rounded-2xl border border-border p-8">
         <DialogHeader className="space-y-3">
