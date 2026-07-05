@@ -29,7 +29,7 @@ export default async function GoalsPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto max-w-4xl animate-rise">
       <PageHeader
         title="Goals"
         description="Give the week and month a gentle shape. Nudge progress as you go — goals reset with each new period."

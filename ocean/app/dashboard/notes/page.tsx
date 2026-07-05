@@ -20,7 +20,7 @@ export default async function NotesPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="mx-auto max-w-5xl animate-rise">
       <PageHeader
         title="Notes"
         description="A calm place for thoughts, lists and fragments. Pin what matters; edits save as you type."

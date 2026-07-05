@@ -20,7 +20,6 @@ export default async function HabitsPage() {
     }),
   ]);
 
-  // habitId -> set of dayKeys
   const done = new Map<string, Set<string>>();
   for (const l of logs) {
     if (!done.has(l.habitId)) done.set(l.habitId, new Set());
@@ -31,7 +30,6 @@ export default async function HabitsPage() {
 
   const views: HabitView[] = habits.map((h) => {
     const set = done.get(h.id) ?? new Set<string>();
-    // streak: consecutive days ending today
     let streak = 0;
     for (let i = window.length - 1; i >= 0; i--) {
       const key = toDayKey(window[i]);
@@ -49,7 +47,7 @@ export default async function HabitsPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto max-w-4xl animate-rise">
       <PageHeader
         title="Habits"
         description="Keep the small things going. Tap a day to mark it done — your streaks are real and remembered."
