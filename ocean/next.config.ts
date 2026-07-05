@@ -15,3 +15,5 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+// Touch configuration to clear Next.js Turbopack HMR cache
+

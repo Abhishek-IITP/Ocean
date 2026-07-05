@@ -15,7 +15,9 @@ import {
   Lock,
   Plus,
   Trash2,
+  X,
 } from "lucide-react";
+import { OceanSelect } from "@/components/ui/ocean-select";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -31,6 +33,14 @@ export interface VaultItemView {
 }
 
 const CATEGORIES: Category[] = ["PASSWORD", "NOTE", "CARD", "KEY", "OTHER"];
+
+const CATEGORY_ICONS: Record<Category, string> = {
+  PASSWORD: "🔑",
+  NOTE: "📄",
+  CARD: "💳",
+  KEY: "🗝️",
+  OTHER: "📦",
+};
 
 export function VaultManager({ items }: { items: VaultItemView[] }) {
   const router = useRouter();
@@ -62,91 +72,142 @@ export function VaultManager({ items }: { items: VaultItemView[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 rounded-2xl border border-border/70 bg-accent/25 p-4">
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Lock className="size-4 text-sage-deep" />
-          Everything here is encrypted at rest with AES-256-GCM. Secrets stay
-          hidden until you reveal them.
+      {/* Security notice + CTA */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border/50 bg-card px-5 py-4 shadow-soft">
+        <p className="flex items-center gap-2.5 text-sm text-muted-foreground">
+          <Lock className="size-4 shrink-0 text-sage-deep/70" />
+          Everything is encrypted at rest with AES-256-GCM.
         </p>
         <button
           onClick={() => setOpen((v) => !v)}
-          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px"
+          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-sage-deep px-4 text-sm font-semibold text-sage-deep-foreground transition-all hover:-translate-y-px hover:bg-sage-deep/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50 cursor-pointer"
         >
-          <Plus className="size-4" /> New item
+          <Plus className="size-3.5" /> New item
         </button>
       </div>
 
+      {/* Inline add form */}
       {open && (
-        <div className="space-y-3 rounded-2xl border border-border/70 bg-card p-5 shadow-soft">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <input
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              placeholder="Title (e.g. Email account)"
-              className="h-11 rounded-xl border border-border bg-background px-4 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-            <select
-              value={form.category}
-              onChange={(e) =>
-                setForm({ ...form, category: e.target.value as Category })
-              }
-              className="h-11 rounded-xl border border-border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c.charAt(0) + c.slice(1).toLowerCase()}
-                </option>
-              ))}
-            </select>
-            <input
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-              placeholder="Username / label (optional)"
-              className="h-11 rounded-xl border border-border bg-background px-4 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-            <input
-              value={form.url}
-              onChange={(e) => setForm({ ...form, url: e.target.value })}
-              placeholder="URL (optional)"
-              className="h-11 rounded-xl border border-border bg-background px-4 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          </div>
-          <textarea
-            value={form.secret}
-            onChange={(e) => setForm({ ...form, secret: e.target.value })}
-            placeholder="The secret — password, key, or private note"
-            rows={3}
-            className="w-full resize-none rounded-xl border border-border bg-background p-4 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-          <div className="flex justify-end gap-2">
+        <div className="rounded-2xl border border-border/50 bg-card shadow-soft overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border/40 px-6 py-4">
+            <h3 className="font-serif text-base font-bold">New vault item</h3>
             <button
               onClick={() => setOpen(false)}
-              className="h-10 rounded-full border border-border px-5 text-sm font-medium transition-colors hover:bg-accent/30"
+              className="grid size-7 place-items-center rounded-lg text-muted-foreground hover:bg-accent/30 hover:text-foreground cursor-pointer transition-colors"
             >
-              Cancel
+              <X className="size-4" />
             </button>
-            <button
-              onClick={submit}
-              className="h-10 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-px"
-            >
-              Encrypt & save
-            </button>
+          </div>
+          <div className="px-6 py-5 space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">Title</label>
+                <input
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  placeholder="e.g. Email account"
+                  className="h-10 w-full rounded-xl border border-border/60 bg-background px-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">Category</label>
+                <OceanSelect
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value as Category })}
+                  className="h-10"
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {CATEGORY_ICONS[c]} {c.charAt(0) + c.slice(1).toLowerCase()}
+                    </option>
+                  ))}
+                </OceanSelect>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">Username / label</label>
+                <input
+                  value={form.username}
+                  onChange={(e) => setForm({ ...form, username: e.target.value })}
+                  placeholder="Optional"
+                  className="h-10 w-full rounded-xl border border-border/60 bg-background px-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">URL</label>
+                <input
+                  value={form.url}
+                  onChange={(e) => setForm({ ...form, url: e.target.value })}
+                  placeholder="Optional"
+                  className="h-10 w-full rounded-xl border border-border/60 bg-background px-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">Secret</label>
+              <textarea
+                value={form.secret}
+                onChange={(e) => setForm({ ...form, secret: e.target.value })}
+                placeholder="The password, key, or private note to encrypt"
+                rows={3}
+                className="w-full resize-none rounded-xl border border-border/60 bg-background p-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setOpen(false)}
+                className="h-9 rounded-full border border-border/60 px-4 text-sm text-muted-foreground hover:bg-accent/20 hover:text-foreground transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submit}
+                className="h-9 rounded-full bg-sage-deep px-5 text-sm font-semibold text-sage-deep-foreground transition-all hover:-translate-y-px hover:bg-sage-deep/90 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50"
+              >
+                Encrypt &amp; save
+              </button>
+            </div>
           </div>
         </div>
       )}
 
+      {/* Items table */}
       {items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border py-16 text-center">
-          <KeyRound className="mx-auto size-6 text-sage-deep" />
-          <p className="mt-3 text-sm text-muted-foreground">
-            Your vault is empty. Keep passwords, keys and private notes safe here.
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/50 py-20 text-center">
+          <KeyRound className="mb-3 size-8 text-muted-foreground/30" />
+          <p className="text-sm font-medium text-muted-foreground">Your vault is empty.</p>
+          <p className="mt-1 text-xs text-muted-foreground/60">
+            Keep passwords, keys and private notes safe here.
           </p>
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {items.map((it) => (
-            <VaultRow key={it.id} item={it} onChange={() => router.refresh()} />
-          ))}
+        <div className="overflow-hidden rounded-2xl border border-border/50 bg-card shadow-soft">
+          {/* Table header */}
+          <div className="hidden items-center border-b border-border/40 px-6 py-3 sm:flex">
+            <div className="flex-1 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/60">
+              Item
+            </div>
+            <div className="w-24 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/60">
+              Category
+            </div>
+            <div className="w-40 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/60">
+              Username
+            </div>
+            <div className="w-28 text-right text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/60">
+              Secret
+            </div>
+          </div>
+
+          {/* Rows */}
+          <ul>
+            {items.map((it, i) => (
+              <VaultRow
+                key={it.id}
+                item={it}
+                isLast={i === items.length - 1}
+                onChange={() => router.refresh()}
+              />
+            ))}
+          </ul>
         </div>
       )}
     </div>
@@ -155,9 +216,11 @@ export function VaultManager({ items }: { items: VaultItemView[] }) {
 
 function VaultRow({
   item,
+  isLast,
   onChange,
 }: {
   item: VaultItemView;
+  isLast: boolean;
   onChange: () => void;
 }) {
   const [secret, setSecret] = useState<string | null>(null);
@@ -166,14 +229,8 @@ function VaultRow({
   const [, startTransition] = useTransition();
 
   async function reveal() {
-    if (revealed) {
-      setRevealed(false);
-      return;
-    }
-    if (secret !== null) {
-      setRevealed(true);
-      return;
-    }
+    if (revealed) { setRevealed(false); return; }
+    if (secret !== null) { setRevealed(true); return; }
     setLoading(true);
     const res = await revealVaultSecret(item.id);
     setLoading(false);
@@ -189,10 +246,7 @@ function VaultRow({
     let value = secret;
     if (value === null) {
       const res = await revealVaultSecret(item.id);
-      if (!res.ok || res.secret === undefined) {
-        toast.error("Could not copy");
-        return;
-      }
+      if (!res.ok || res.secret === undefined) { toast.error("Could not copy"); return; }
       value = res.secret;
       setSecret(value);
     }
@@ -201,21 +255,67 @@ function VaultRow({
   }
 
   return (
-    <div className="group rounded-2xl border border-border/70 bg-card p-5 shadow-soft">
-      <div className="flex items-start justify-between">
+    <li
+      className={cn(
+        "group flex items-center gap-3 px-6 py-4 transition-colors hover:bg-muted/10",
+        !isLast && "border-b border-border/40"
+      )}
+    >
+      {/* Icon + title */}
+      <div className="flex flex-1 items-center gap-3 min-w-0">
+        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-sage-deep/8 text-sm">
+          {CATEGORY_ICONS[item.category]}
+        </span>
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="grid size-8 place-items-center rounded-lg bg-accent/50 text-sage-deep">
-              <KeyRound className="size-4" />
-            </span>
-            <div className="min-w-0">
-              <h3 className="truncate text-sm font-semibold">{item.title}</h3>
-              <p className="truncate text-xs text-muted-foreground">
-                {item.username || item.category.toLowerCase()}
-              </p>
-            </div>
-          </div>
+          <div className="truncate text-sm font-medium">{item.title}</div>
+          {item.url && (
+            <div className="truncate text-[11px] text-muted-foreground/60">{item.url}</div>
+          )}
         </div>
+      </div>
+
+      {/* Category */}
+      <div className="hidden w-24 shrink-0 sm:block">
+        <span className="inline-flex rounded-full bg-accent/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+          {item.category.toLowerCase()}
+        </span>
+      </div>
+
+      {/* Username */}
+      <div className="hidden w-40 shrink-0 truncate text-sm text-muted-foreground sm:block">
+        {item.username ?? "—"}
+      </div>
+
+      {/* Secret + actions */}
+      <div className="flex w-28 shrink-0 items-center justify-end gap-1">
+        <code
+          className={cn(
+            "mr-1 flex-1 truncate font-mono text-xs",
+            revealed ? "text-foreground" : "tracking-widest text-muted-foreground/40"
+          )}
+        >
+          {revealed && secret !== null ? secret : "••••••••"}
+        </code>
+        <button
+          onClick={reveal}
+          aria-label={revealed ? "Hide" : "Reveal"}
+          className="grid size-7 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-accent/30 hover:text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50"
+        >
+          {loading ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : revealed ? (
+            <EyeOff className="size-3.5" />
+          ) : (
+            <Eye className="size-3.5" />
+          )}
+        </button>
+        <button
+          onClick={copy}
+          aria-label="Copy"
+          className="grid size-7 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-accent/30 hover:text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50"
+        >
+          <Copy className="size-3.5" />
+        </button>
         <button
           onClick={() =>
             startTransition(async () => {
@@ -224,42 +324,11 @@ function VaultRow({
             })
           }
           aria-label="Delete"
-          className="grid size-7 place-items-center rounded-md text-muted-foreground opacity-0 transition-colors hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+          className="grid size-7 place-items-center rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sage-deep/50"
         >
           <Trash2 className="size-3.5" />
         </button>
       </div>
-
-      <div className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5">
-        <code
-          className={cn(
-            "flex-1 truncate font-mono text-sm",
-            !revealed && "tracking-widest text-muted-foreground"
-          )}
-        >
-          {revealed && secret !== null ? secret : "••••••••••••"}
-        </code>
-        <button
-          onClick={reveal}
-          aria-label={revealed ? "Hide" : "Reveal"}
-          className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground"
-        >
-          {loading ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : revealed ? (
-            <EyeOff className="size-4" />
-          ) : (
-            <Eye className="size-4" />
-          )}
-        </button>
-        <button
-          onClick={copy}
-          aria-label="Copy"
-          className="grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground"
-        >
-          <Copy className="size-4" />
-        </button>
-      </div>
-    </div>
+    </li>
   );
 }
