@@ -15,6 +15,9 @@
 .vscode
 .agents
 .impeccable
+claude.md
+product.md
+
 
 # testing
 /coverage

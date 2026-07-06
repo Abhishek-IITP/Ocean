@@ -2,6 +2,7 @@ import { requireUser } from "@/app/lib/hook";
 import prisma from "@/app/lib/db";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { FocusTimer } from "@/components/dashboard/FocusTimer";
+import { FocusSoundscape } from "@/components/dashboard/FocusSoundscape";
 import { lastNDaysUTC, startOfDayUTC, startOfWeekUTC, toDayKey } from "@/app/lib/dates";
 import { format } from "date-fns";
 
@@ -49,7 +50,7 @@ export default async function FocusPage() {
         description="Quiet, timed sessions of deep work. Every completed session is counted here."
       />
 
-      <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
+      <div className="grid gap-8 lg:grid-cols-[350px_1fr]">
         {/* Left: big timer */}
         <div className="space-y-4">
           <FocusTimer minutesToday={todayMin} sessionsToday={todayAgg._count} />
@@ -69,6 +70,9 @@ export default async function FocusPage() {
               </div>
             ))}
           </div>
+
+          {/* Focus Soundscape Custom Playlist block */}
+          <FocusSoundscape />
         </div>
 
         {/* Right: chart + history */}
