@@ -275,7 +275,7 @@ export function WorkspaceCanvas({ scenario, className }: WorkspaceCanvasProps) {
           >
             {/* Phone Screen Status Bar */}
             <div className="flex items-center justify-between px-6 pt-3 pb-1 border-b border-border/20 text-muted-foreground/60 select-none bg-card">
-              <span className="text-[9px] font-bold tracking-wider">{scenario.time}</span>
+              <span className="text-[9px] font-bold tracking-wider">09:41</span>
               <div className="flex items-center gap-1">
                 <Wifi className="size-2.5" />
                 <Battery className="size-3" />

@@ -123,7 +123,7 @@ export default async function MeetingsRoute() {
                     You and {guestName}
                   </p>
                   <MeetingPrepButton
-                    title={item.title}
+                    title={item.title ?? "Meeting"}
                     guestName={guestName}
                   />
                 </div>

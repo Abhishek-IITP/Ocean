@@ -24,7 +24,7 @@ export interface PlannerTask {
   id: string;
   title: string;
   quadrant: Quadrant;
-  status: "TODO" | "DONE";
+  status: "TODO" | "IN_PROGRESS" | "DONE";
 }
 
 const QUADRANTS: {
