@@ -216,10 +216,10 @@ export function FocusTimer({
   const fullscreenOverlay = fullscreen && (
     <div
       className={cn(
-        "fixed inset-0 z-[99999] flex flex-col items-center justify-center transition-all duration-700 bg-cover bg-center select-none w-screen h-screen",
-        bgTheme === "default" && "bg-background text-foreground",
-        bgTheme === "sage-grad" && "bg-gradient-to-tr from-sage-deep/15 via-accent/25 to-background text-foreground",
-        bgTheme === "custom" && "text-white"
+        "fixed inset-0 z-[99999] flex flex-col items-center justify-center transition-all duration-500 bg-cover bg-center select-none w-screen h-screen",
+        bgTheme === "default" && "bg-background/96 backdrop-blur-3xl text-foreground",
+        bgTheme === "sage-grad" && "bg-gradient-to-tr from-sage-deep/10 via-accent/15 to-background/96 backdrop-blur-3xl text-foreground",
+        bgTheme === "custom" && "text-white bg-black/60 backdrop-blur-xl"
       )}
       style={
         bgTheme === "custom" && customBg

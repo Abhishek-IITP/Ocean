@@ -7,10 +7,10 @@ import {
 } from "@/app/lib/actions/goals";
 import { cn } from "@/lib/utils";
 import { Check, Minus, Plus, Target, Trash2 } from "lucide-react";
-import { OceanSelect } from "@/components/ui/ocean-select";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Period = "WEEKLY" | "MONTHLY";
 
@@ -56,15 +56,21 @@ export function GoalsManager({ goals }: { goals: GoalView[] }) {
           placeholder="Name a goal for this week or month…"
           className="h-10 min-w-[200px] flex-1 rounded-xl bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground/50"
         />
-        {/* Period select */}
-        <OceanSelect
+        
+        {/* Styled custom select dropdown */}
+        <Select
           value={period}
-          onChange={(e) => setPeriod(e.target.value as Period)}
-          className="h-10 w-28 shrink-0"
+          onValueChange={(val) => setPeriod(val as Period)}
         >
-          <option value="WEEKLY">Weekly</option>
-          <option value="MONTHLY">Monthly</option>
-        </OceanSelect>
+          <SelectTrigger className="h-10 w-28 shrink-0 rounded-xl cursor-pointer">
+            <SelectValue placeholder="Period" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="WEEKLY" className="cursor-pointer">Weekly</SelectItem>
+            <SelectItem value="MONTHLY" className="cursor-pointer">Monthly</SelectItem>
+          </SelectContent>
+        </Select>
+
         {/* Target count */}
         <input
           type="number"

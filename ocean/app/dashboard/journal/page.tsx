@@ -7,7 +7,6 @@ import {
 } from "@/components/journal/JournalEditor";
 import { startOfDayUTC, startOfWeekUTC, startOfMonthUTC } from "@/app/lib/dates";
 import { format } from "date-fns";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 function stripHtml(html: string) {
   return html
@@ -16,47 +15,71 @@ function stripHtml(html: string) {
     .trim();
 }
 
+const CALM_PROMPTS = [
+  "How did your energy ebb and flow today? When did you feel most in sync with your work?",
+  "What is one quiet victory you achieved today that no one else witnessed?",
+  "Did you encounter any moments of friction today? How did you respond to them?",
+  "If today had a color or a climate, what would it be and why?",
+  "What was the most peaceful moment of your day today?",
+  "Is there a thought or a task that you carried through the day that you're ready to put down now?",
+  "Whom did you connect with today? What did that interaction teach you?",
+  "What is something you learned today—about your work, or about yourself?",
+  "How did you care for your focus today? What distractions did you gently slide past?",
+  "Look back at your calendar today. Which block of time felt most meaningful?",
+  "What was a small detail today—a sound, a light, a phrase—that brought you a moment of clarity?",
+  "How did your body feel during your focus sessions today? Did you breathe deeply?",
+  "What is one thing you can forgive yourself for from today?",
+  "What did you make space for today that you've been putting off?",
+  "If you could summarize today in three calm verbs, what would they be?",
+  "What habit felt easiest to maintain today? Which one required a bit of quiet resolve?",
+  "What are you looking forward to letting go of when your head hits the pillow tonight?",
+  "What is a task you decided not to do today, and how did that decision make you feel?",
+  "What was a moment today where you felt completely present?",
+  "What is one promise you want to keep to yourself tomorrow?"
+];
+
 async function generateDailyPrompt(userId: string) {
   try {
-    if (!process.env.GEMINI_API_KEY) return null;
-
     const today = startOfDayUTC();
     const [tasks, focus] = await Promise.all([
       prisma.task.findMany({
         where: { userId, createdAt: { gte: today } },
-        select: { title: true, status: true },
+        select: { status: true },
       }),
       prisma.focusSession.findMany({
         where: { userId, startedAt: { gte: today } },
-        select: { minutes: true, label: true },
+        select: { minutes: true },
       }),
     ]);
 
-    if (tasks.length === 0 && focus.length === 0) {
-      return null; // Fallback to default subtext
+    const totalFocus = focus.reduce((acc, s) => acc + s.minutes, 0);
+
+    // If focus session took place, select focus prompt
+    if (totalFocus > 0) {
+      const focusPrompts = [
+        "You dedicated time to quiet focus today. How does your mind feel after this immersion?",
+        "After today's deep work focus, is there any concept or thought you are ready to rest now?",
+        "Focus is a form of active meditation. What did you notice about your attention today?"
+      ];
+      return focusPrompts[new Date().getDate() % focusPrompts.length];
     }
 
-    const model = new ChatGoogleGenerativeAI({
-      model: "gemini-2.5-flash",
-      apiKey: process.env.GEMINI_API_KEY,
-      temperature: 0.6,
-    });
+    // If tasks were checked, select task prompt
+    if (tasks.length > 0) {
+      const taskPrompts = [
+        "You completed tasks on your planner today. Did those efforts bring you closer to what matters?",
+        "A productive list is finished. What are you most proud of letting go of today?",
+        "As you check off your tasks, what is one promise you want to carry into tomorrow?"
+      ];
+      return taskPrompts[new Date().getDate() % taskPrompts.length];
+    }
 
-    const promptText = `
-You are Ocean's quiet, wise journaling companion.
-Today, the user completed the following:
-- Tasks: ${JSON.stringify(tasks)}
-- Focus Sessions: ${JSON.stringify(focus)}
-
-Write a single, gentle, short reflective journaling prompt (1 to 2 sentences) based on this activity. 
-Be encouraging and personal, linking their effort to their state of mind. Keep it simple and calm. Don't say "Here is your prompt" or use formatting. Just return the prompt text directly.
-`;
-
-    const response = await model.invoke(promptText);
-    return response.content.toString().trim();
+    // Fallback random zen prompts
+    const dayIndex = new Date().getDate() % CALM_PROMPTS.length;
+    return CALM_PROMPTS[dayIndex];
   } catch (err) {
-    console.error("Failed to generate dynamic prompt:", err);
-    return null;
+    console.error("Failed to generate local daily prompt:", err);
+    return CALM_PROMPTS[0];
   }
 }
 

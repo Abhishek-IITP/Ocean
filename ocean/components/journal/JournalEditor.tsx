@@ -14,6 +14,7 @@ import {
   Strikethrough,
   Type,
   Underline,
+  Sparkles,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
@@ -489,6 +490,17 @@ export function JournalEditor({
   const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
 
+  // Client-side dynamic prompts state
+  const [activePrompt, setActivePrompt] = useState(dynamicDailyPrompt ?? "");
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  // Sync state if initial prop updates
+  useEffect(() => {
+    if (dynamicDailyPrompt) {
+      setActivePrompt(dynamicDailyPrompt);
+    }
+  }, [dynamicDailyPrompt]);
+
   // Track the editor key to force re-mount when switching tabs
   const [editorKey, setEditorKey] = useState(kind);
 
@@ -498,6 +510,27 @@ export function JournalEditor({
     setContent(entries[k]?.content ?? "");
     setGratitude(entries[k]?.gratitude ?? "");
     setSaved(false);
+  }
+
+  async function askAiForPrompt() {
+    setIsAiLoading(true);
+    try {
+      const res = await fetch("/api/journal/prompt", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (data.ok && data.prompt) {
+        setActivePrompt(data.prompt);
+        toast.success("AI Prompt generated successfully");
+      } else {
+        toast.error(data.error ?? "Failed to contact AI generator. Quota limit reached.");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Network connection failed.");
+    } finally {
+      setIsAiLoading(false);
+    }
   }
 
   function save() {
@@ -534,11 +567,29 @@ export function JournalEditor({
 
       {/* Prompt */}
       <div className="px-7 pt-6 pb-2">
-        <p className="font-serif text-xl font-bold text-foreground">
-          {kind === "DAILY" && dynamicDailyPrompt ? "Today's Reflection Focus" : PROMPTS[kind].prompt}
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground leading-relaxed text-justify">
-          {kind === "DAILY" && dynamicDailyPrompt ? dynamicDailyPrompt : PROMPTS[kind].sub}
+        <div className="flex items-center justify-between gap-4">
+          <p className="font-serif text-xl font-bold text-foreground">
+            {kind === "DAILY" ? "Today's Reflection Focus" : PROMPTS[kind].prompt}
+          </p>
+          {kind === "DAILY" && (
+            <button
+              type="button"
+              onClick={askAiForPrompt}
+              disabled={isAiLoading}
+              className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-sage-deep hover:text-sage-deep/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              title="Query AI for an activity-based daily reflection prompt"
+            >
+              {isAiLoading ? (
+                <Loader2 className="size-3 animate-spin" />
+              ) : (
+                <Sparkles className="size-3 text-sage-deep" />
+              )}
+              {isAiLoading ? "Asking AI..." : "Refine with AI"}
+            </button>
+          )}
+        </div>
+        <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed text-justify">
+          {kind === "DAILY" ? (activePrompt || PROMPTS.DAILY.sub) : PROMPTS[kind].sub}
         </p>
       </div>
 
