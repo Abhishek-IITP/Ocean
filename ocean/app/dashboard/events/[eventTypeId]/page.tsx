@@ -25,7 +25,7 @@ async function getData(eventTypeId: string) {
 }
 
 
-export default async function EditRoute({params}:{params: Promise<{eventTypeId: string}>}){
+export default async function EditRoute({params}:{params: Promise<{eventTypeId: string}> | {eventTypeId: string}}){
 
     const { eventTypeId } = await params
     const data = await getData(eventTypeId)

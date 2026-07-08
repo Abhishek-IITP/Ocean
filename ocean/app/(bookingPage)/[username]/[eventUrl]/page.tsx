@@ -54,8 +54,8 @@ async function getData(eventUrl: string, userName: string) {
 export default async function BookingFormRoute({ 
   params, searchParams
 }: {
-  params: Promise<{ username: string; eventUrl: string }>;
-  searchParams: Promise<{date?: string; time?: string}>
+  params: Promise<{ username: string; eventUrl: string }> | { username: string; eventUrl: string };
+  searchParams: Promise<{date?: string; time?: string}> | {date?: string; time?: string}
 }) {
   const { username, eventUrl } = await params;
   const resolvedSearchParams = await searchParams;
@@ -159,15 +159,12 @@ export default async function BookingFormRoute({
             </div>
           </div>
 
-
-
-
          <Separator orientation="vertical" className="h-full w-[2px]  mx-6" />
 
            <RenderCalendar availability={data.User?.availability as any} />
          <Separator orientation="vertical" className="h-full w-[2px]  mx-6" />
 
-         <TimeTable selectedDate={selectedDate} userName={username} duration={data.duration} />
+          <TimeTable selectedDate={selectedDate} userName={username} duration={data.duration} />
 
         </CardContent>
       </Card>
