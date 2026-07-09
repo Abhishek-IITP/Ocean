@@ -54,8 +54,8 @@ async function getData(eventUrl: string, userName: string) {
 export default async function BookingFormRoute({ 
   params, searchParams
 }: {
-  params: Promise<{ username: string; eventUrl: string }> | { username: string; eventUrl: string };
-  searchParams: Promise<{date?: string; time?: string}> | {date?: string; time?: string}
+  params: Promise<{ username: string; eventUrl: string }>;
+  searchParams: Promise<{date?: string; time?: string}>
 }) {
   const { username, eventUrl } = await params;
   const resolvedSearchParams = await searchParams;

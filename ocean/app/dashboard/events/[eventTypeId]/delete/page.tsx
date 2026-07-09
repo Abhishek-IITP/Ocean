@@ -5,7 +5,7 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/comp
 import Link from "next/link";
 
 export default async function DeleteEventType({params}: {
-  params: Promise<{ eventTypeId: string }> | { eventTypeId: string };
+  params: Promise<{ eventTypeId: string }>;
 }) {
     const { eventTypeId } = await params;
 
