@@ -20,7 +20,7 @@ export async function getDashboardData(userId: string) {
   const weekStart = startOfWeekUTC();
   const monthStart = startOfMonthUTC();
   const now = new Date();
-  const recentDays = lastNDaysUTC(14);
+  const recentDays = lastNDaysUTC(30);
 
   const [
     user,
@@ -33,6 +33,8 @@ export async function getDashboardData(userId: string) {
     focusWeek,
     recentNotes,
     upcomingBookings,
+    recentCompletedTasks,
+    recentFocusSessions,
   ] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
@@ -94,6 +96,21 @@ export async function getDashboardData(userId: string) {
       take: 4,
       include: { EventType: { select: { title: true } } },
     }),
+    prisma.task.findMany({
+      where: {
+        userId,
+        status: "DONE",
+        completedAt: { gte: recentDays[0] },
+      },
+      select: { completedAt: true },
+    }),
+    prisma.focusSession.findMany({
+      where: {
+        userId,
+        startedAt: { gte: recentDays[0] },
+      },
+      select: { startedAt: true },
+    }),
   ]);
 
   // ── derived: habit completion today + streak ──
@@ -107,13 +124,29 @@ export async function getDashboardData(userId: string) {
   const habitsDoneToday = logsByDay.get(todayKey)?.size ?? 0;
   const habitIdsDoneToday = logsByDay.get(todayKey) ?? new Set<string>();
 
-  // consecutive days (ending today) with at least one habit logged
+  // Track all active productivity days (habits logged, focus sessions, or completed tasks)
+  const activeDays = new Set<string>();
+  for (const log of habitLogs) {
+    activeDays.add(toDayKey(log.date));
+  }
+  for (const task of recentCompletedTasks) {
+    if (task.completedAt) {
+      activeDays.add(toDayKey(task.completedAt));
+    }
+  }
+  for (const session of recentFocusSessions) {
+    activeDays.add(toDayKey(session.startedAt));
+  }
+
+  // consecutive days (ending today/yesterday) with any activity logged
   let streak = 0;
   for (let i = recentDays.length - 1; i >= 0; i--) {
     const key = toDayKey(recentDays[i]);
-    if ((logsByDay.get(key)?.size ?? 0) > 0) streak++;
-    else if (key !== todayKey) break; // today with 0 doesn't break a prior streak
-    else continue;
+    if (activeDays.has(key)) {
+      streak++;
+    } else if (key !== todayKey) {
+      break;
+    }
   }
 
   const focusMinutesToday = focusToday._sum.minutes ?? 0;
